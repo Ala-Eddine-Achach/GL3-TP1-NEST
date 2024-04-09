@@ -24,7 +24,7 @@ import { TypeOrmCoreModule } from '@nestjs/typeorm/dist/typeorm-core.module';
       username: 'root',
       password: '',
       database: 'tp1_nest_cvdb',
-      entities: ['dist/**/*.entity{.ts,.js}'],
+      entities: [__dirname + '/../**/*.entity.{js,ts}'],
       synchronize: true,
     }),
     CvsModule,

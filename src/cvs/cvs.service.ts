@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -43,15 +43,43 @@ export class CvsService {
 
   findAll() {}
 
-  findOne(id: number) {
-    return `This action returns a #${id} cv`;
+  findOne(id: string) {
+    return this.cvsRepository.findOneBy({ id: id });
+  }
+  findByAgeCriteria(age: number, criteria: string) {
+    return this.cvsRepository
+      .createQueryBuilder('cv')
+      .where('cv.age = :age', { age })
+      .orWhere('cv.name LIKE :criteria', { criteria: `%${criteria}%` })
+      .orWhere('cv.firstname LIKE :criteria', { criteria: `%${criteria}%` })
+      .orWhere('cv.job LIKE :criteria', { criteria: `%${criteria}%` })
+      .getMany();
   }
 
-  update(id: number, updateCvDto: UpdateCvDto) {
+  update(id: string, updateCvDto: UpdateCvDto) {
     return `This action updates a #${id} cv`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} cv`;
+  }
+  async findAllPaginated(page: number, pageSize: number): Promise<Cv[]> {
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+    return this.cvsRepository.find({
+      skip,
+      take,
+    });
+  }
+  findOneById(id: string, user: Partial<User>) {
+    return this.cvsRepository.findOneBy({ id, user });
+  }
+
+  async updateFilePath(id: string, Filepath: string, user: Partial<User>) {
+    const cv = await this.findOneById(id, user);
+    if (!cv) throw new NotFoundException(`le cv d'id ${id} n'existe pas`);
+    cv.path = Filepath;
+    console.log('File added/updated successfully !');
+    await this.cvsRepository.save(cv);
   }
 }
